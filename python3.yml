@@ -1,0 +1,48 @@
+- hosts: all
+  gather_facts: False
+  vars:
+    - ansible_connection: ssh
+    - ansible_user: root
+    - ansible_ssh_pass: "{{ lookup('env','RM2_PASSWORD') }}"
+
+  tasks:
+    - name: Setting task variables
+      set_fact:
+        python_version: 3.6.5-3
+        python_arch: armv7h
+
+    - name: Make python folder
+      raw: mkdir -p '/home/root/.localpackages/python-{{python_version}}-{{python_arch}}'
+
+    - name: Make bin folder
+      raw: mkdir -p /home/root/.bin
+
+    - name: Make localpackages folder
+      raw: mkdir -p '/home/root/.localpackages/python-{{python_version}}-{{python_arch}}'
+
+    - name: Get python
+      raw: wget -O 'python-{{python_version}}-{{python_arch}}.pkg.tar.xz' 'http://tardis.tiny-vps.com/aarm/packages/p/python/python-{{python_version}}-{{python_arch}}.pkg.tar.xz'
+
+    - name: Extract
+      raw: tar -xvf 'python-{{python_version}}-{{python_arch}}.pkg.tar.xz'
+
+    - name: Remove existing install
+      raw: rm -rf '.localpackages/python-{{python_version}}-{{python_arch}}'
+
+    - name: Move
+      raw: mv usr '.localpackages/python-{{python_version}}-{{python_arch}}'
+
+    - name: Create exe
+      raw: printf "#!/bin/sh\nLD_LIBRARY_PATH=/home/root/.localpackages/python-{{python_version}}-{{python_arch}}/usr/lib:\$LD_LIBRARY_PATH /home/root/.localpackages/python-{{python_version}}-{{python_arch}}/usr/bin/python \"\$@\"" > /home/root/.bin/python3
+
+    - name: Set perms
+      raw: chmod +x /home/root/.bin/python3
+
+    - name: Create link
+      raw: ln -sf /home/root/.bin/python3 /home/root/.bin/python
+
+    - name: delete file
+      raw: rm -f 'python-{{python_version}}-{{python_arch}}.pkg.tar.xz'
+
+    - name: add to path
+      raw: awk -v line='PATH=\$PATH:/home/root/.bin' 'FNR==NR && line==$0{f=1; exit} END{if (!f) print line >> FILENAME}' /home/root/.bashrc

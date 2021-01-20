@@ -1,0 +1,45 @@
+- hosts: all
+  gather_facts: False
+  vars:
+    - ansible_connection: ssh
+    - ansible_user: root
+    - ansible_ssh_pass: "{{ lookup('env','RM2_PASSWORD') }}"
+
+  tasks:
+    - name: Setting task variables
+      set_fact:
+        python2_version: 2.7.14-3
+        python2_arch: armv7h
+
+    - name: Make python folder
+      raw: mkdir -p '/home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}'
+
+    - name: Make bin folder
+      raw: mkdir -p /home/root/.bin
+
+    - name: Make localpackages folder
+      raw: mkdir -p '/home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}'
+
+    - name: Get python2
+      raw: wget -O 'python2-{{python2_version}}-{{python2_arch}}.pkg.tar.xz' 'http://tardis.tiny-vps.com/aarm/packages/p/python2/python2-{{python2_version}}-{{python2_arch}}.pkg.tar.xz'
+
+    - name: Extract
+      raw: tar -xvf 'python2-{{python2_version}}-{{python2_arch}}.pkg.tar.xz'
+
+    - name: Remove existing install
+      raw: rm -rf '.localpackages/python2-{{python2_version}}-{{python2_arch}}'
+
+    - name: Move
+      raw: mv usr '.localpackages/python2-{{python2_version}}-{{python2_arch}}'
+
+    - name: Create exe
+      raw: printf "#!/bin/sh\nLD_LIBRARY_PATH=/home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}/usr/lib:\$LD_LIBRARY_PATH /home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}/usr/bin/python2 \"\$@\"" > /home/root/.bin/python2
+
+    - name: Set perms
+      raw: chmod +x /home/root/.bin/python2
+
+    - name: delete package file
+      raw: rm -f 'python2-{{python2_version}}-{{python2_arch}}.pkg.tar.xz'
+
+    - name: add to path
+      raw: awk -v line='PATH=\$PATH:/home/root/.bin' 'FNR==NR && line==$0{f=1; exit} END{if (!f) print line >> FILENAME}' /home/root/.bashrc

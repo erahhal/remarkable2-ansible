@@ -1,0 +1,10 @@
+[Unit]
+Description=touch injector
+After=home.mount
+
+[Service]
+Environment=HOME=/home/root
+ExecStart={{ APPDIR }}/touchinjector
+
+[Install]
+WantedBy=multi-user.target
