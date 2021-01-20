@@ -12,3 +12,8 @@ Remarkable 2 Ansible scripts
 
 * ./python2.sh
 * ./koreader.sh
+
+### Notes
+
+* The koreader installation script is inspired by ddvk/remarkable-autoinstall at github
+  * https://github.com/ddvk/remarkable-autoinstall/tree/master/rm2
