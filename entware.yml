@@ -1,0 +1,36 @@
+- hosts: all
+  gather_facts: False
+  vars:
+    - ansible_connection: ssh
+    - ansible_user: root
+    - ansible_python_interpreter: /home/root/.bin/python3
+    - ansible_ssh_pass: "{{ lookup('env','RM2_PASSWORD') }}"
+
+  tasks:
+    - name: check if already downloaded
+      stat:
+        path: /tmp/entware.zip
+      register: downloaded
+
+    - name: Download package
+      command: chdir: /tmp cmd: wget -O entware.zip http://github.com/Evidlo/remarkable_entware/archive/master.zip
+
+    - name: unzip package
+      shell:
+        cmd: unzip -o '/tmp/entware.zip' -d '/tmp/'
+
+    - name: Install
+      shell:
+        chdir: /tmp/remarkable_entware-master
+        cmd: ./entware_install.sh
+
+    - name: add to path
+      raw: grep -qF '/opt/bin' /etc/profile || (awk '/PATH="/{print;print "PATH=\"$PATH:\/opt\/bin\"";next}1' /etc/profile > /etc/profile.bak && mv /etc/profile.bak /etc/profile)
+
+    - name: Install sudo
+      shell:
+        cmd: /opt/bin/opkg install sudo
+
+    - name: Update sudoers
+      shell:
+        cmd: sed -i '/^#.*sudo.*ALL/s/^#//' /opt/etc/sudoers

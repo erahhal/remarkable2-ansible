@@ -33,7 +33,7 @@
       raw: mv usr '.localpackages/python2-{{python2_version}}-{{python2_arch}}'
 
     - name: Create exe
-      raw: printf "#!/bin/sh\nLD_LIBRARY_PATH=/home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}/usr/lib:\$LD_LIBRARY_PATH /home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}/usr/bin/python2 \"\$@\"" > /home/root/.bin/python2
+      raw: printf "#!/bin/sh\nLD_LIBRARY_PATH=/home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}/lib:\$LD_LIBRARY_PATH /home/root/.localpackages/python2-{{python2_version}}-{{python2_arch}}/bin/python2 \"\$@\"" > /home/root/.bin/python2
 
     - name: Set perms
       raw: chmod +x /home/root/.bin/python2
