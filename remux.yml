@@ -1,0 +1,16 @@
+- hosts: all
+  gather_facts: False
+  vars:
+    - ansible_connection: ssh
+    - ansible_user: root
+    - ansible_python_interpreter: /home/root/.bin/python3
+    - ansible_ssh_pass: "{{ lookup('env','RM2_PASSWORD') }}"
+
+  tasks:
+    - name: Install packages
+      command:
+        cmd: /opt/bin/opkg install rm2fb remux
+
+    - name: Enable remux
+      command:
+        cmd: systemctl enable --now remux

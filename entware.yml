@@ -13,19 +13,61 @@
       register: downloaded
 
     - name: Download package
-      command: chdir: /tmp cmd: wget -O entware.zip http://github.com/Evidlo/remarkable_entware/archive/master.zip
+      command:
+        chdir: /tmp
+        cmd: wget -O entware.zip http://github.com/Evidlo/remarkable_entware/archive/master.zip
 
     - name: unzip package
       shell:
         cmd: unzip -o '/tmp/entware.zip' -d '/tmp/'
 
+    - name: Remove old install
+      file:
+        path: /home/root/.entware
+        state: absent
+
+    - name: Remove old install
+      file:
+        path: /opt/*
+        state: absent
+
+    - name: check if /opt is mounted
+      shell: df | grep opt | wc -l
+      register: opt
+
+    - name: Unmount /opt
+      shell:
+        cmd: umount /opt
+      when: opt.stdout == "1"
+
+    - name: Remove old install
+      file:
+        path: /opt
+        state: absent
+
     - name: Install
       shell:
         chdir: /tmp/remarkable_entware-master
-        cmd: ./entware_install.sh
+        cmd: ./install.sh
 
     - name: add to path
       raw: grep -qF '/opt/bin' /etc/profile || (awk '/PATH="/{print;print "PATH=\"$PATH:\/opt\/bin\"";next}1' /etc/profile > /etc/profile.bak && mv /etc/profile.bak /etc/profile)
+
+    - name: Remove stable branch of toltec
+      lineinfile:
+        path: /opt/etc/opkg.conf
+        regexp: '^src/gz toltec https://toltec-dev.org/stable'
+        line: '# src/gz toltec https://toltec-dev.org/stable'
+
+    - name: Insert/Update "Match User" configuration block in /etc/ssh/sshd_config
+      blockinfile:
+        path: /opt/etc/opkg.conf
+        insertafter: EOF
+        block: |
+          arch rmall 200
+          arch rm2 250
+          src/gz toltec-rmall https://toltec-dev.org/testing/rmall
+          src/gz toltec-rm2 https://toltec-dev.org/testing/rm2
 
     - name: Install sudo
       shell:

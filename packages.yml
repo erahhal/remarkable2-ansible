@@ -1,0 +1,62 @@
+- hosts: all
+  gather_facts: False
+  vars:
+    - ansible_connection: ssh
+    - ansible_user: root
+    - ansible_python_interpreter: /home/root/.bin/python3
+    - ansible_ssh_pass: "{{ lookup('env','RM2_PASSWORD') }}"
+
+  tasks:
+    - name: Update packages
+      command:
+        cmd: /opt/bin/opkg update
+
+    - name: Install packages
+      command:
+        cmd: /opt/bin/opkg install ca-certificates wget
+
+    - name: Update packages again
+      command:
+        cmd: /opt/bin/opkg update
+
+    - name: Upgrade packages
+      command:
+        cmd: /opt/bin/opkg upgrade
+
+    - name: Install toltec
+      command:
+        cmd: /opt/bin/opkg install toltec-bootstrap
+
+    - name: fix paths
+      shell:
+        cmd: sed -i '/^\(export \)\?PATH="\?\$PATH:\/opt\/bin:\/opt\/sbin"\?$/d' /home/root/.bashrc
+
+    - name: fix paths
+      shell:
+        cmd: |
+          if [[ ! -e /home/root/.bashrc ]] || ! grep -q '^\(export \)\?PATH="\?/opt/bin:/opt/sbin:\$PATH"\?$' /home/root/.bashrc; then
+            cat >> /home/root/.bashrc << EOF
+          # Path added by Toltec bootstrap
+          PATH="/opt/bin:/opt/sbin:\$PATH"
+          EOF
+          fi
+
+    - name: Install other packages
+      command:
+        cmd: /opt/bin/opkg install remux oxide draft koreader harmony chessmarkable mines puzzles recrossable retris calculator plato
+
+    - name: Disable xochitl
+      command:
+        cmd: systemctl disable --now xochitl
+
+    - name: Disable oxide
+      command:
+        cmd: systemctl disable --now tarnish
+
+    - name: Disable draft
+      command:
+        cmd: systemctl disable --now draft
+
+    - name: Enable remux
+      command:
+        cmd: systemctl enable --now remux

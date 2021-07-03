@@ -1,0 +1,33 @@
+- hosts: all
+  gather_facts: False
+  vars:
+    - ansible_connection: ssh
+    - ansible_user: root
+    - ansible_python_interpreter: /home/root/.bin/python3
+    - ansible_ssh_pass: "{{ lookup('env','RM2_PASSWORD') }}"
+
+  vars_prompt:
+    - name: username
+      prompt: Enter new username
+      private: no
+
+#     - name: password
+#       prompt: Enter password
+
+  tasks:
+    # - name: Encrypt password
+    #   shell:
+    #     cmd: "{{ansible_python_interpreter}} -c \"import crypt; print(crypt.crypt('{{password}}', 'password'))\""
+    #   register: encrypted
+
+    - name: Add user
+      user:
+        name: "{{username}}"
+        shell: /bin/bash
+        home: "/home/{{username}}"
+        # password: "{{ encrypted.stdout }}"
+        groups: sudo
+
+    - name: Print the gateway for each host when defined
+      debug:
+        msg: Now SSH into the tablet as root and run "passwd {{username}}"
